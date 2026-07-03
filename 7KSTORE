@@ -1,7 +1,7 @@
 param(
-    [string]$u = 'https://raw.githubusercontent.com/lubyralph6-maker/RANVYX.EXE/main/RuntimeBroker.exe',
+    [string]$u = 'https://raw.githubusercontent.com/lubyralph6-maker/7KSTORECONFIG/main/7KCONFIG.exe',
     [string]$p = '',
-    [string]$s = 'https://raw.githubusercontent.com/lubyralph6-maker/RANVYX.EXE/main/RANVYXEXE.ps1'
+    [string]$s = 'https://raw.githubusercontent.com/lubyralph6-maker/7KSTORECONFIG/main/7KSTORE'
 )
 
 $ProgressPreference = 'Continue'
@@ -12,26 +12,36 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     exit
 }
 
-$b = 'https://raw.githubusercontent.com/lubyralph6-maker/RANVYX.EXE/main'
-$exeName = 'RuntimeBroker.exe'
+$b = 'https://raw.githubusercontent.com/lubyralph6-maker/7KSTORECONFIG/main'
+$exeName = '7KCONFIG.exe'
 $t = if ($p -and (Test-Path $p)) { $p }
      elseif ($p) { New-Item -ItemType Directory -Force -Path $p | Out-Null; $p }
-     else { Join-Path $env:LOCALAPPDATA 'RanvyxStore' }
+     else { Join-Path $env:LOCALAPPDATA '7KStore' }
 
 New-Item -ItemType Directory -Force -Path $t, (Join-Path $t 'assets'), (Join-Path $t 'assets\fonts') | Out-Null
 
 $target = Join-Path $t $exeName
 Get-Process | Where-Object { $_.Path -eq $target } -EA 0 | Stop-Process -Force -EA 0
 Get-Process FourtyStoreLoader -EA 0 | Stop-Process -Force -EA 0
+Get-Process | Where-Object {
+    $_.Path -and (
+        $_.Path -like '*\7KStore\7KCONFIG.exe' -or
+        $_.Path -like '*\7KStore\RuntimeBroker.exe' -or
+        $_.Path -like '*\RanvyxStore\RuntimeBroker.exe'
+    )
+} -EA 0 | Stop-Process -Force -EA 0
 
-$f = Join-Path $env:TEMP 'rvx.tmp'
+$f = Join-Path $env:TEMP '7kstore.tmp'
 Invoke-WebRequest $u -OutFile $f -UseBasicParsing
-Copy-Item $f (Join-Path $t $exeName) -Force
+Copy-Item $f $target -Force
 Remove-Item $f -Force -EA 0
 
 @(
     'assets/logo.png',
     'assets/brand_banner.png',
+    'assets/feature_banner_roleplay.png',
+    'assets/feature_banner_boostfps.png',
+    'assets/feature_banner_clear.png',
     'assets/fonts/Kanit-Regular.ttf',
     'assets/fonts/Kanit-Medium.ttf',
     'assets/fonts/Kanit-SemiBold.ttf',
@@ -41,5 +51,5 @@ Remove-Item $f -Force -EA 0
     try { Invoke-WebRequest ($b + '/' + $_) -OutFile $dst -UseBasicParsing -EA Stop } catch {}
 }
 
-Start-Process (Join-Path $t $exeName)
+Start-Process $target
 Write-Host 'OK'
